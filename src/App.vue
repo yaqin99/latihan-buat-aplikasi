@@ -51,10 +51,7 @@
     nama: string;
     status: boolean;
   }
-  const todoList = reactive<todoType[]>([
-      { id: 1, nama: 'Belajar PHP', status: true },
-      { id: 2, nama: 'Makan', status: false }
-  ])
+ let todoList = reactive<todoType[]>([])
   
   const todo = ref('');
   const idTodo = ref();
@@ -82,17 +79,21 @@
     })
   }
     const addTodo = () => {
-    // cekEdit = false ;
-      if(isEdit.value == true){
-        simpanEdit()
-        isEdit.value = false;
-        todo.value = '' ; 
-      }
-      else {
-      const arrLength = todoList.length + 1;
       todoList.push({
-        id: arrLength, nama: todo.value, status: false
+        
+
       })
+    // // cekEdit = false ;
+    //   if(isEdit.value == true){
+    //     simpanEdit()
+    //     isEdit.value = false;
+    //     todo.value = '' ; 
+    //   }
+    //   else {
+    //   const arrLength = todoList.length + 1;
+    //   todoList.push({
+    //     id: arrLength, nama: todo.value, status: false
+    //   })
       }
     todo.value = '';
     
@@ -100,6 +101,19 @@
   const deleteTodo = (i: number) =>{
     todoList.splice(i, 1)
   }
-
+  onMounted(async() =>{
+    const response = await fetch ('https://localhost:8181');
+    const data = await response.json();
+    // todoList = [];
+    if(data.lenght > 0 ){
+      data.forEach((d: any) => {
+        todoList.push({
+          id: d.id_task,
+          nama: d.nama_task,
+          status: d.status == 1 ? true : false
+        })
+      });
+    }
+  }
 </script>
 
