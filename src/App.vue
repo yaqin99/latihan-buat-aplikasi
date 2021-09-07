@@ -10,13 +10,15 @@
       <table class="table table-striped">
         <tr v-for="(todo, i) in todoList" :key="todo.id">
           <td>{{ i + 1 }}</td>
-          <td>{{ todo.nama }}</td>
+          <td><span :class="todo.status == true ? 'selesai' : 'gak-selesai'">{{ todo.nama }}</span></td>
           <td>
             <input type="checkbox" v-model="todo.status">
           </td>
           <td class="text-end">
             <button type="button" class="btn-sm btn-outline-info" @click="editTodo(i)">Edit</button>
             <button type="button" class="btn-sm btn-outline-danger" @click="deleteTodo(i)">Hapus</button>
+            <button type="button" class="btn btn-warning mr-2" @click="simpanEdit(i)">Edit</button>
+
           </td>
            
         </tr>
@@ -27,12 +29,8 @@
       <div class="d-flex">
         <input type="text" v-model="todo" class="form-control">
 
-        
-       
           <button type="button" class="btn btn-primary mr-2" @click="addTodo()">Simpan</button>
-        
-
-        
+          
       </div>
 
       {{todoList}}
@@ -45,14 +43,17 @@
 
 </template>
 <script setup lang="ts">
-  import { reactive, ref } from 'vue'
+  import { onMounted, reactive, ref } from 'vue'
+  import Api from './services/api'
   type todoType = {
     id: number;
     nama: string;
     status: boolean;
   }
- let todoList = reactive<todoType[]>([])
   
+  let todoList = reactive<todoType[]>([])
+  
+
   const todo = ref('');
   const idTodo = ref();
   // let cekEdit:any ; 
@@ -70,50 +71,85 @@
     
     isEdit.value = true ; 
     console.log(isEdit.value)
+    return row ; 
   }
-
-  const simpanEdit = () => {
+  
+  const simpanEdit = async (i:number) => {
      
-     todoList.splice(idTodo.value - 1,1,{
-     id:idTodo.value,nama:todo.value,status:false
-    })
-  }
-    const addTodo = () => {
-      todoList.push({
-        
-
-      })
-    // // cekEdit = false ;
-    //   if(isEdit.value == true){
-    //     simpanEdit()
-    //     isEdit.value = false;
-    //     todo.value = '' ; 
-    //   }
-    //   else {
-    //   const arrLength = todoList.length + 1;
-    //   todoList.push({
-    //     id: arrLength, nama: todo.value, status: false
-    //   })
+     const todoBody = {
+        id:'',
+        nama_kegiatan:todo.value,
+        status:2 ,
       }
-    todo.value = '';
+      
+     
+     const y = todoList[i]; 
     
-  }
-  const deleteTodo = (i: number) =>{
-    todoList.splice(i, 1)
-  }
-  onMounted(async() =>{
-    const response = await fetch ('https://localhost:8181');
-    const data = await response.json();
-    // todoList = [];
-    if(data.lenght > 0 ){
-      data.forEach((d: any) => {
-        todoList.push({
-          id: d.id_task,
-          nama: d.nama_task,
-          status: d.status == 1 ? true : false
-        })
-      });
+     const path = '/task' + '/' + y.id; 
+     const data = await Api.putResource(path,todoBody,'PUT')
+     todoList.splice(0,todoList.length); 
+     const mintaData = await Api.getResource('/',todoList)
+     todo.value = '';
+     isEdit.value = false ; 
+     }
+   
+     
+  const addTodo = async () => {
+      
+      
+       const todoBody = {
+        id:'',
+        nama_kegiatan:todo.value,
+        status:2 ,
+      }
+      
+    try{
+      const data = await Api.postResource('/task',todoBody,'POST')
+      todo.value = '';
+      
+            const response = await fetch('http://localhost:8181');
+            const sample = await response.json();
+            const lastArr =  sample.slice(-1).pop();
+            console.log(lastArr)
+
+                todoList.push({
+                  id: lastArr.id,
+                  nama: lastArr.nama_kegiatan,
+                  status: lastArr.status == 1 ? true : false
+                })
+      }
+    catch(err){
+    console.log(err)
     }
+
+    
+    }
+
+
+  const deleteTodo = async (i: number) =>{
+    const index = todoList[i]; 
+    
+    const path = '/task' + '/' + index.id;
+    todoList.splice(0,todoList.length)
+    const data = await Api.deleteResource(path,'DELETE');
+    const get = await Api.getResource('/',todoList)
   }
+
+  onMounted(async() =>{
+    console.log(todoList)
+    try {
+      const data = await Api.getResource('/',todoList)
+    }
+    catch(err){
+      console.log(err)
+    }
+    
+  })
+
 </script>
 
+<style scoped>
+.selesai {
+  text-decoration: line-through;
+}
+</style>
