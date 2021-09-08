@@ -17,7 +17,7 @@
           <td class="text-end">
             <button type="button" class="btn-sm btn-outline-info" @click="editTodo(i)">Edit</button>
             <button type="button" class="btn-sm btn-outline-danger" @click="deleteTodo(i)">Hapus</button>
-            <button type="button" class="btn btn-warning mr-2" @click="simpanEdit(i)">Edit</button>
+           
 
           </td>
            
@@ -29,8 +29,8 @@
       <div class="d-flex">
         <input type="text" v-model="todo" class="form-control">
 
-          <button type="button" class="btn btn-primary mr-2" @click="addTodo()">Simpan</button>
-          
+          <button type="button" class="btn btn-primary mr-2" @click="isEdit == true ? simpanEdit() : addTodo()">Simpan</button>
+           <!-- <button type="button" class="btn btn-warning mr-2" @click="simpanEdit()">Edit</button> -->
       </div>
 
       {{todoList}}
@@ -62,19 +62,19 @@
   console.log(isEdit)
   
 
-
+  let indexEdit = ref();
   const editTodo = (i: number) => {
     //  cekEdit = true ;
     const row = todoList[i];
     todo.value = row.nama; 
     idTodo.value = row.id;
-    
+    indexEdit.value = i ; 
     isEdit.value = true ; 
     console.log(isEdit.value)
-    return row ; 
+    
   }
   
-  const simpanEdit = async (i:number) => {
+  const simpanEdit = async () => {
      
      const todoBody = {
         id:'',
@@ -82,14 +82,14 @@
         status:2 ,
       }
       
-     
-     const y = todoList[i]; 
+     const idnya  = indexEdit.value ; 
+     const y = todoList[idnya]; 
     
      const path = '/task' + '/' + y.id; 
      const data = await Api.putResource(path,todoBody,'PUT')
      todoList.splice(0,todoList.length); 
-     const mintaData = await Api.getResource('/',todoList)
      todo.value = '';
+     const mintaData = await Api.getResource('/',todoList)
      isEdit.value = false ; 
      }
    
